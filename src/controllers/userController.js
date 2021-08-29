@@ -1,10 +1,12 @@
 const User = require('../models/User');
+const { cnpj, cpf } = require('cpf-cnpj-validator');
+const { validationResult } = require('express-validator');
 
 module.exports = {
   async index(req, res) {
     const users = await User.findAll({
       attributes: {
-        exclude: ['password'],
+        exclude: ['password', 'cpfcnpj'],
       },
     });
     if (users === '' || users === null) {
@@ -14,13 +16,15 @@ module.exports = {
   },
 
   async store(req, res, next) {
-    const { name, email, password, passwordConfirm } = req.body;
+    const { name, email, password, passwordConfirm, cpfcnpj } = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        status: 0,
+        message: errors.array()[0].msg,
+      });
+    }
     try {
-      if (!name || !email || !password || !passwordConfirm) {
-        const error = new Error('Dados faltantes');
-        error.statusCode = 422;
-        throw error;
-      }
       const hasUser = await User.findOne({ where: { email: email } });
       if (hasUser) {
         const error = new Error('Usuário ou E-mail já cadastrado');
@@ -32,13 +36,19 @@ module.exports = {
         error.statusCode = 400;
         throw error;
       }
-      const user = await User.create({ name, email, password });
+      if (!cpf.isValid(cpfcnpj) && !cnpj.isValid(cpfcnpj)) {
+        const error = new Error('Dados inválidos');
+        error.statusCode = 400;
+        throw error;
+      }
+      const user = await User.create({ name, email, password, cpfcnpj });
       return res.status(201).json({
         status: 1,
         message: 'Usuário cadastrado com sucesso',
         user: {
           name: user.name,
           email: user.email,
+          cpfcnpj: user.cpfcnpj,
         },
       });
     } catch (err) {
@@ -46,7 +56,40 @@ module.exports = {
     }
   },
 
-  async update(req, res) {},
+  async update(req, res, next) {
+    const { name, email, password, passwordConfirm, cpfcnpj } = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        status: 0,
+        message: errors.array()[0].msg,
+      });
+    }
+    try {
+      if (password !== passwordConfirm) {
+        const error = new Error('Dados inválidos');
+        error.statusCode = 400;
+        throw error;
+      }
+      if (!cpf.isValid(cpfcnpj) && !cnpj.isValid(cpfcnpj)) {
+        const error = new Error('Dados inválidos');
+        error.statusCode = 400;
+        throw error;
+      }
+      const updatedUser = await User.update(
+        { name, email, password, cpfcnpj },
+        {
+          where: { id: req.params.id },
+        }
+      );
+      return res.status(200).json({
+        status: 1,
+        message: 'Usuário atualizado com sucesso',
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
 
   async delete(req, res) {},
 };

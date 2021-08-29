@@ -7,6 +7,11 @@ class User extends Model {
         name: DataTypes.STRING,
         email: DataTypes.STRING,
         password: DataTypes.STRING,
+        cpfcnpj: DataTypes.STRING,
+        role: {
+          type: DataTypes.ENUM('admin', 'user', 'provider'),
+          defaultValue: 'user',
+        },
       },
       { sequelize }
     );

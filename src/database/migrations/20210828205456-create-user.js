@@ -21,6 +21,15 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
+      cpfcnpj: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      role: {
+        type: Sequelize.ENUM,
+        values: ['admin', 'user', 'provider'],
+        defaultValue: 'user',
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
