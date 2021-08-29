@@ -2,9 +2,16 @@ const express = require('express');
 const userController = require('../controllers/userController');
 const { body } = require('express-validator');
 
+const authMiddleware = require('../middlewares/auth');
+
 const router = express.Router();
 
-router.get('/', userController.index);
+router.post(
+  '/login',
+  [body('email', 'Este não é um email válido').isEmail()],
+  userController.login
+);
+
 router.post(
   '/',
   [
@@ -20,6 +27,10 @@ router.post(
   userController.store
 );
 
+router.use(authMiddleware);
+
+router.get('/', userController.index);
+
 router.put(
   '/:id',
   [
@@ -34,5 +45,7 @@ router.put(
   ],
   userController.update
 );
+
+router.delete('/:id', userController.delete);
 
 module.exports = router;

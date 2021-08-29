@@ -1,4 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
+const bcrypt = require('bcryptjs');
 
 class User extends Model {
   static init(sequelize) {
@@ -12,8 +13,17 @@ class User extends Model {
           type: DataTypes.ENUM('admin', 'user', 'provider'),
           defaultValue: 'user',
         },
+        isLogged: DataTypes.BOOLEAN,
       },
-      { sequelize }
+      {
+        sequelize,
+        hooks: {
+          beforeCreate: user => {
+            const salt = bcrypt.genSaltSync();
+            user.password = bcrypt.hashSync(user.password, salt);
+          },
+        },
+      }
     );
   }
 }
