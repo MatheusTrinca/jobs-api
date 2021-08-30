@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 module.exports = {
   host: 'localhost',
   dialect: 'mysql',

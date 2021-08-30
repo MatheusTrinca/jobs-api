@@ -57,16 +57,20 @@ module.exports = {
     }
   },
 
-  async index(req, res) {
-    const users = await User.findAll({
-      attributes: {
-        exclude: ['password', 'cpfcnpj'],
-      },
-    });
-    if (users === '' || users === null) {
-      return res.status(200).json({ message: 'Nenhum usuário cadastrado' });
+  async index(req, res, next) {
+    try {
+      const users = await User.findAll({
+        attributes: {
+          exclude: ['password', 'cpfcnpj'],
+        },
+      });
+      if (users === '' || users === null) {
+        return res.status(200).json({ message: 'Nenhum usuário cadastrado' });
+      }
+      return res.status(200).json({ users });
+    } catch (err) {
+      next(err);
     }
-    return res.status(200).json({ users });
   },
 
   async store(req, res, next) {
@@ -129,10 +133,11 @@ module.exports = {
         error.statusCode = 400;
         throw error;
       }
+
       await User.update(
         { name, email, password, cpfcnpj },
         {
-          where: { id: req.params.id },
+          where: { id: req.userId },
         }
       );
       return res.status(200).json({
@@ -148,7 +153,7 @@ module.exports = {
     try {
       await User.destroy({
         where: {
-          id: req.params.id,
+          id: req.userId,
         },
       });
       return res.status(200).json({

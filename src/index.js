@@ -3,13 +3,13 @@ require('dotenv').config();
 
 require('./database');
 
-const userRouter = require('./routes/userRouter');
+const apiRouter = require('./routes');
 
 const app = express();
 
 app.use(express.json());
 
-app.use('/api/users', userRouter);
+app.use('/api', apiRouter);
 
 const PORT = process.env.SERVER_PORT;
 
